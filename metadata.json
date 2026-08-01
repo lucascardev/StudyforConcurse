@@ -1,0 +1,6 @@
+{
+  "name": "DATAPREV 2026 - Study Tracker",
+  "description": "Plataforma de acompanhamento de estudos para o concurso DATAPREV 2026 (Perfil 3 - Desenvolvimento de Software) integrada ao Google Sheets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
