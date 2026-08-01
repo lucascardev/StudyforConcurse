@@ -2,14 +2,16 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { parseJsonResponse } from './utils';
-import { DATAPREV_SYLLABUS, getAllTopics } from './dataprev-syllabus';
+import { DATAPREV_SYLLABUS, getAllTopics, Discipline } from './dataprev-syllabus';
 import {
   TopicProgress,
   StudySession,
   ScheduledRevision,
   GoogleSheetsConfig,
   StudySummaryStats,
-  TopicStatus
+  TopicStatus,
+  ExamQuestion,
+  PastExam
 } from './types';
 
 const LOCAL_STORAGE_KEY_PROGRESS = 'dataprev_2026_progress_v2';
