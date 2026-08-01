@@ -373,7 +373,7 @@ export function DashboardView({
                       borderRadius: '8px',
                       color: '#f8fafc'
                     }}
-                    formatter={(val: number) => [`${val} horas`, 'Tempo Estudado']}
+                    formatter={(val: any) => [`${val} horas`, 'Tempo Estudado']}
                   />
                   <Legend
                     formatter={(value) => <span className="text-xs text-slate-300">{value}</span>}
