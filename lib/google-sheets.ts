@@ -18,6 +18,7 @@ export async function getGoogleAuthClient(accessToken?: string) {
         credentials,
         scopes: [
           'https://www.googleapis.com/auth/spreadsheets',
+          'https://www.googleapis.com/auth/drive',
           'https://www.googleapis.com/auth/drive.file'
         ]
       });
@@ -37,6 +38,7 @@ export async function getGoogleAuthClient(accessToken?: string) {
       },
       scopes: [
         'https://www.googleapis.com/auth/spreadsheets',
+        'https://www.googleapis.com/auth/drive',
         'https://www.googleapis.com/auth/drive.file'
       ]
     });
@@ -46,6 +48,7 @@ export async function getGoogleAuthClient(accessToken?: string) {
   return new google.auth.GoogleAuth({
     scopes: [
       'https://www.googleapis.com/auth/spreadsheets',
+      'https://www.googleapis.com/auth/drive',
       'https://www.googleapis.com/auth/drive.file'
     ]
   });
@@ -54,6 +57,7 @@ export async function getGoogleAuthClient(accessToken?: string) {
 export async function createDataprevSpreadsheet(accessToken?: string) {
   const auth = await getGoogleAuthClient(accessToken);
   const sheets = google.sheets({ version: 'v4', auth });
+  const drive = google.drive({ version: 'v3', auth });
 
   // 1. Create spreadsheet
   const createResponse = await sheets.spreadsheets.create({
@@ -89,6 +93,19 @@ export async function createDataprevSpreadsheet(accessToken?: string) {
 
   if (!spreadsheetId) {
     throw new Error('Não foi possível criar a planilha do Google Sheets.');
+  }
+
+  // Share permission so anyone with link can edit/view
+  try {
+    await drive.permissions.create({
+      fileId: spreadsheetId,
+      requestBody: {
+        role: 'writer',
+        type: 'anyone'
+      }
+    });
+  } catch (err) {
+    console.warn('Aviso ao compartilhar a planilha via Drive API:', err);
   }
 
   // 2. Populate Headers and Initial Syllabus Data

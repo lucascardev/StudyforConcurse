@@ -60,6 +60,13 @@ export async function POST(req: NextRequest) {
     let isSheetsDisabled = false;
 
     if (
+      rawMessage.includes('The caller does not have permission') ||
+      rawMessage.includes('PERMISSION_DENIED')
+    ) {
+      isSheetsDisabled = false;
+      userMessage =
+        'Sem permissão no Google API (Error 403: The caller does not have permission). Por favor, certifique-se de que a Google Drive API está ATIVADA no seu Google Cloud Console. Se estiver conectando uma planilha existente, compartilhe-a com o e-mail da sua Service Account como Editor.';
+    } else if (
       rawMessage.includes('Google Sheets API has not been used in project') ||
       rawMessage.includes('Could not load the default credentials') ||
       rawMessage.includes('disabled') ||
