@@ -8,13 +8,47 @@ export async function getGoogleAuthClient(accessToken?: string) {
     oauth2Client.setCredentials({ access_token: accessToken });
     return oauth2Client;
   }
-  const auth = new google.auth.GoogleAuth({
+
+  // 1. Support raw JSON string in GOOGLE_SERVICE_ACCOUNT_CREDENTIALS
+  const serviceAccountEnv = process.env.GOOGLE_SERVICE_ACCOUNT_CREDENTIALS;
+  if (serviceAccountEnv) {
+    try {
+      const credentials = JSON.parse(serviceAccountEnv);
+      return new google.auth.GoogleAuth({
+        credentials,
+        scopes: [
+          'https://www.googleapis.com/auth/spreadsheets',
+          'https://www.googleapis.com/auth/drive.file'
+        ]
+      });
+    } catch (e) {
+      console.error('Erro ao processar GOOGLE_SERVICE_ACCOUNT_CREDENTIALS:', e);
+    }
+  }
+
+  // 2. Support GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY environment variables
+  const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
+  const privateKey = process.env.GOOGLE_PRIVATE_KEY;
+  if (clientEmail && privateKey) {
+    return new google.auth.GoogleAuth({
+      credentials: {
+        client_email: clientEmail,
+        private_key: privateKey.replace(/\\n/g, '\n')
+      },
+      scopes: [
+        'https://www.googleapis.com/auth/spreadsheets',
+        'https://www.googleapis.com/auth/drive.file'
+      ]
+    });
+  }
+
+  // 3. Fallback to default Application Credentials search
+  return new google.auth.GoogleAuth({
     scopes: [
       'https://www.googleapis.com/auth/spreadsheets',
       'https://www.googleapis.com/auth/drive.file'
     ]
   });
-  return auth;
 }
 
 export async function createDataprevSpreadsheet(accessToken?: string) {

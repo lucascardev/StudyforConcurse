@@ -61,12 +61,13 @@ export async function POST(req: NextRequest) {
 
     if (
       rawMessage.includes('Google Sheets API has not been used in project') ||
+      rawMessage.includes('Could not load the default credentials') ||
       rawMessage.includes('disabled') ||
       rawMessage.includes('sheets.googleapis.com')
     ) {
       isSheetsDisabled = true;
       userMessage =
-        'Integração do Google Sheets indisponível no ambiente da nuvem (API do Google Sheets desativada no projeto GCP). Todos os seus estudos continuam sendo salvos com total segurança no Armazenamento Local do seu navegador.';
+        'Integração do Google Sheets indisponível (credenciais de Service Account do Google não configuradas no servidor). Todos os seus estudos continuam salvos com total segurança no Armazenamento Local do seu navegador.';
     }
 
     return NextResponse.json(
