@@ -14,6 +14,7 @@ import {
   Upload,
   Info
 } from 'lucide-react';
+import { GoogleSheetsConfig } from '@/lib/types';
 import {
   requestGoogleLogin,
   getStoredGoogleAccessToken,
