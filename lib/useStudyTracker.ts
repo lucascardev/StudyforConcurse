@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { parseJsonResponse } from './utils';
+import { getStoredGoogleAccessToken } from './google-oauth';
 import { DATAPREV_SYLLABUS, getAllTopics, Discipline } from './dataprev-syllabus';
 import {
   TopicProgress,
@@ -232,13 +233,19 @@ export function useStudyTracker() {
   };
 
   // Create Google Spreadsheet
-  const createGoogleSheet = async () => {
+  const createGoogleSheet = async (customAccessToken?: string) => {
     setIsSyncing(true);
     setSyncError(null);
     try {
+      const token = customAccessToken || getStoredGoogleAccessToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch('/api/sheets', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ action: 'CREATE_SHEET' })
       });
       const data = await parseJsonResponse(res);
@@ -264,16 +271,22 @@ export function useStudyTracker() {
   };
 
   // Sync / Read data from connected Google Sheet
-  const fetchFromGoogleSheet = useCallback(async (idToUse?: string) => {
+  const fetchFromGoogleSheet = useCallback(async (idToUse?: string, customAccessToken?: string) => {
     const targetId = idToUse || sheetsConfig.spreadsheetId;
     if (!targetId) return;
 
     setIsSyncing(true);
     setSyncError(null);
     try {
+      const token = customAccessToken || getStoredGoogleAccessToken();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch('/api/sheets', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ action: 'READ_DATA', spreadsheetId: targetId })
       });
       const data = await parseJsonResponse(res);
@@ -434,9 +447,15 @@ export function useStudyTracker() {
     if (sheetsConfig.spreadsheetId) {
       try {
         setIsSyncing(true);
+        const token = getStoredGoogleAccessToken();
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
         const res = await fetch('/api/sheets', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({
             action: 'APPEND_SESSION',
             spreadsheetId: sheetsConfig.spreadsheetId,
