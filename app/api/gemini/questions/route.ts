@@ -12,8 +12,9 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { mode, examText, banca, year, disciplineName, topicTitle, questionCount } = body;
+    const { mode, examText, banca, year, disciplineName, topicTitle, questionCount, model: requestedModel } = body;
 
+    const selectedModel = requestedModel || 'gemini-3.6-flash';
     const ai = new GoogleGenAI({ apiKey });
 
     const systemInstruction = `Você é um elaborador e especialista de bancas examinadoras de concursos públicos do Brasil (CEBRASPE/CESPE, FGV, FCC, IBFC, VUNESP, IADES).
@@ -89,7 +90,7 @@ Retorne APENAS um objeto JSON válido no seguinte formato:
     }
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: selectedModel,
       contents: prompt,
       config: {
         systemInstruction,

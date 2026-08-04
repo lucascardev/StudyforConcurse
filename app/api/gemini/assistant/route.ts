@@ -12,7 +12,9 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { mode, topicTitle, disciplineName, subtopics, userPrompt } = body;
+    const { mode, topicTitle, disciplineName, subtopics, userPrompt, model: requestedModel } = body;
+
+    const selectedModel = requestedModel || 'gemini-3.6-flash';
 
     const ai = new GoogleGenAI({ apiKey });
 
@@ -54,7 +56,7 @@ Pergunta: ${userPrompt}`;
     }
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: selectedModel,
       contents: prompt,
       config: {
         systemInstruction,
@@ -64,6 +66,7 @@ Pergunta: ${userPrompt}`;
 
     return NextResponse.json({
       success: true,
+      modelUsed: selectedModel,
       text: response.text || 'Não foi possível gerar a resposta.'
     });
   } catch (err: unknown) {

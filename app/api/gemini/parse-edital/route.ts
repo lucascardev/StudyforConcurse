@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { editalText, banca, cargo } = await req.json();
+    const { editalText, banca, cargo, model: requestedModel } = await req.json();
 
     if (!editalText || typeof editalText !== 'string' || !editalText.trim()) {
       return NextResponse.json(
@@ -20,6 +20,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const selectedModel = requestedModel || 'gemini-3.6-flash';
     const ai = new GoogleGenAI({ apiKey });
 
     const systemInstruction = `Você é um analista especialista em concursos públicos e estruturas de editais de bancas examinadoras (Cebraspe, FGV, FCC, IBFC, VUNESP, IADES).
@@ -58,7 +59,7 @@ Retorne APENAS um objeto JSON válido (sem texto extra antes ou depois) com o se
 Associe cores válidas (indigo, cyan, emerald, blue, rose, amber, purple, teal) para cada disciplina.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: selectedModel,
       contents: prompt,
       config: {
         systemInstruction,

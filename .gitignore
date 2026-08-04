@@ -10,3 +10,4 @@ coverage/
 firebase-applet-config*.json
 !firebase-applet-config.json.example
 
+*.tsbuildinfo

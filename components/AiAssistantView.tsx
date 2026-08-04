@@ -13,9 +13,15 @@ import {
   Copy,
   Check,
   Brain,
-  HelpCircle
+  HelpCircle,
+  Cpu,
+  Zap,
+  Volume2,
+  Image as ImageIcon,
+  Info
 } from 'lucide-react';
 import { DATAPREV_SYLLABUS, getAllTopics } from '@/lib/dataprev-syllabus';
+import { GEMINI_MODELS, DEFAULT_GEMINI_MODEL, GeminiModelInfo } from '@/lib/gemini-models';
 
 interface AiAssistantViewProps {
   initialTopicTitle?: string;
@@ -37,17 +43,21 @@ export function AiAssistantView({
   );
 
   const [mode, setMode] = useState<string>(initialMode || 'EXPLAIN');
+  const [selectedModelId, setSelectedModelId] = useState<string>(DEFAULT_GEMINI_MODEL);
   const [userPrompt, setUserPrompt] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [usedModelName, setUsedModelName] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
 
   const selectedTopic = allTopics.find((t) => t.id === selectedTopicId) || allTopics[0];
+  const activeModel = GEMINI_MODELS.find((m) => m.id === selectedModelId) || GEMINI_MODELS[0];
 
   const handleGenerate = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setLoading(true);
     setAiResponse(null);
+    setUsedModelName(null);
 
     try {
       const res = await fetch('/api/gemini/assistant', {
@@ -58,7 +68,8 @@ export function AiAssistantView({
           topicTitle: selectedTopic.title,
           disciplineName: selectedTopic.disciplineName,
           subtopics: selectedTopic.subtopics,
-          userPrompt
+          userPrompt,
+          model: selectedModelId
         })
       });
 
@@ -68,6 +79,7 @@ export function AiAssistantView({
       }
 
       setAiResponse(data.text);
+      setUsedModelName(activeModel.name);
     } catch (err: unknown) {
       const error = err as Error;
       setAiResponse(`⚠️ Erro ao consultar Tutor IA: ${error.message}`);
@@ -83,21 +95,34 @@ export function AiAssistantView({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const getCategoryIcon = (category: GeminiModelInfo['category']) => {
+    switch (category) {
+      case 'image':
+        return <ImageIcon className="w-3.5 h-3.5 text-pink-400" />;
+      case 'tts':
+        return <Volume2 className="w-3.5 h-3.5 text-amber-400" />;
+      default:
+        return <Cpu className="w-3.5 h-3.5 text-purple-400" />;
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-purple-600/20 text-purple-400 border border-purple-500/30 flex items-center justify-center font-bold">
-            <Bot className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              Tutor de Inteligência Artificial • DATAPREV 2026
-            </h2>
-            <p className="text-xs text-slate-400">
-              Gere resumos, questões inéditas comentadas, mnemônicos e tire dúvidas específicas sobre o edital
-            </p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-600/20 text-purple-400 border border-purple-500/30 flex items-center justify-center font-bold shrink-0">
+              <Bot className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                Tutor de Inteligência Artificial • DATAPREV 2026
+              </h2>
+              <p className="text-xs text-slate-400">
+                Gere resumos, questões inéditas comentadas, mnemônicos e tire dúvidas com os novos modelos Gemini 3.6, 3.5, 3.1 & Multimodais
+              </p>
+            </div>
           </div>
         </div>
 
@@ -131,6 +156,59 @@ export function AiAssistantView({
 
       {/* Query Form */}
       <form onSubmit={handleGenerate} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5 shadow-sm">
+        
+        {/* Gemini Model Selector */}
+        <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <label className="text-xs font-bold text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Zap className="w-4 h-4 text-purple-400" />
+              <span>Modelo Gemini do Tutor IA</span>
+            </label>
+            {activeModel.badge && (
+              <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                {activeModel.badge}
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <select
+                value={selectedModelId}
+                onChange={(e) => setSelectedModelId(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 text-slate-100 rounded-lg px-3 py-2 text-xs font-medium focus:outline-none focus:border-purple-500"
+              >
+                {GEMINI_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} ({m.categoryLabel})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Model Specs Pill */}
+            <div className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-slate-300 font-medium">
+                {getCategoryIcon(activeModel.category)}
+                <span>{activeModel.categoryLabel}</span>
+              </div>
+              <div className="text-[11px] font-mono text-purple-400">
+                {[
+                  activeModel.limits.rpm && `${activeModel.limits.rpm}`,
+                  activeModel.limits.tpm && `${activeModel.limits.tpm}`,
+                  activeModel.limits.rpd && `${activeModel.limits.rpd}`
+                ]
+                  .filter(Boolean)
+                  .join(' • ')}
+              </div>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-slate-400 leading-tight">
+            {activeModel.description}
+          </p>
+        </div>
+
         {/* Topic Selector */}
         <div>
           <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
@@ -178,19 +256,19 @@ export function AiAssistantView({
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Gerando Conteúdo com Gemini...</span>
+              <span>Gerando Conteúdo com {activeModel.name}...</span>
             </>
           ) : (
             <>
               <Sparkles className="w-4 h-4" />
               <span>
                 {mode === 'EXPLAIN'
-                  ? 'Gerar Resumo do Tópico'
+                  ? `Gerar Resumo do Tópico (${activeModel.name})`
                   : mode === 'QUIZ'
-                  ? 'Gerar Questões com Gabarito'
+                  ? `Gerar Questões com Gabarito (${activeModel.name})`
                   : mode === 'FLASHCARDS'
-                  ? 'Gerar Flashcards'
-                  : 'Consultar Tutor IA'}
+                  ? `Gerar Flashcards (${activeModel.name})`
+                  : `Consultar Tutor IA (${activeModel.name})`}
               </span>
             </>
           )}
@@ -203,7 +281,9 @@ export function AiAssistantView({
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2 text-xs font-bold text-purple-400">
               <Sparkles className="w-4 h-4" />
-              <span>Resposta Gerada pelo Tutor IA</span>
+              <span>
+                Resposta Gerada pelo Tutor IA {usedModelName && `• Modelo: ${usedModelName}`}
+              </span>
             </div>
             <button
               onClick={handleCopy}
